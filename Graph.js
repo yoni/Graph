@@ -191,6 +191,7 @@ Graph = function(){
       return false;
     };
   }
+  
   //The complement of a graph G is a graph with the same vertex set as G but with an edge set such that xy is an edge in complement(G) if and only if xy is not an edge in G.
   this.complement = function() {
     var C = new Graph();
@@ -205,5 +206,6 @@ Graph = function(){
     }
     return C;
   };
+  
 };
 })();

@@ -9,10 +9,22 @@
   <script>
   $(document).ready(function(){
 
-module("Edge");
+module("Undirected Graph");
+
+test("The null graph", function() {
+  var G = new Graph();  
+  equals(G.order(), 0, "order of G is 0");
+  equals(G.size(), 0, "size of G is 0");
+});
+
+test("Graph, Edge, and Vertex object creation", function() {
+  ok( new Graph(), "created a graph" );
+  ok( new Edge({},{}), "created an edge" );
+  ok( new Vertex(), "created a vertex" );
+});
 
 test("Edge construction", function() {
-  var v1 = {a:'a'};
+  var v1 = {a:'a'}; // doesn't use the Vertex object explicitly
   var v2 = {b:'b'};
   ok(new Edge(v1, v2), "created an edge" );
   try {
@@ -27,30 +39,9 @@ test("Edge construction", function() {
   }
 });
 
-test("Edge link vs. loop", function() {
-  var v1 = {a:'a'};
-  var v2 = {b:'b'};
-  var v3 = {b:'b'};// not the same edge as v2
-  var link1 = new Edge(v1, v2);
-  var link2 = new Edge(v2, v3);
-  var loop = new Edge(v1, v1);
-  ok(link1.isLink(), "A link should say it's a link");
-  ok(link2.isLink(), "A link should say it's a link");
-  ok(loop.isLoop(), "A loop should say it's a loop");
-});
-
-module("Graph");
-
-test("Graph, Edge, and Vertex object creation", function() {
-  ok( new Graph(), "created a graph" );
-  ok( new Edge({},{}), "created an edge" );
-  ok( new Vertex(), "created a vertex" );
-});
-
-test("The null graph", function() {
-  var G = new Graph();  
-  equals(G.order(), 0, "order of G is 0");
-  equals(G.size(), 0, "size of G is 0");
+test("Vertex construction", function() {
+  var v1 = new Vertex({a:'a'}); // doesn't use the Vertex object explicitly
+  ok(v1.a, "the vertex has all of the same key:value pairs as the arguments to its constructor" );
 });
 
 test("Add vertices one at a time", function() {
@@ -61,6 +52,25 @@ test("Add vertices one at a time", function() {
   var v2 = new Vertex({name:'janis', age:27});
   ok(G.addVertex(v2), "added a vertex");
   equals(G.order(), 2, "order of G changed to 2");
+});
+
+test("Add a vertex that is not an object", function() {
+  var G = new Graph();
+  try {
+	  G.addVertex();
+  } catch(e) {
+	  ok(e, "Got exception when trying to create a vertex using no argument.");
+  }
+  try {
+	  G.addVertex(5);
+  } catch(e) {
+	  ok(e, "Got exception when trying to create a vertex using a number.");
+  }
+  try {
+      G.addVertex('hello');
+  } catch(e) {
+	  ok(e, "Got exception when trying to create a vertex using a string.");
+  }
 });
 
 test("Add edges one at a time", function() {
@@ -110,6 +120,43 @@ test("Add multiple edges, duplicates allowed", function() {
   equals(G.size(), 3, "size of G changed to 3");
 });
 
+
+test("Edge link vs. loop", function() {
+  var v1 = {a:'a'};
+  var v2 = {b:'b'};
+  var v3 = {b:'b'};// not the same edge as v2
+  var link1 = new Edge(v1, v2);
+  var link2 = new Edge(v2, v3);
+  var loop = new Edge(v1, v1);
+  ok(link1.isLink(), "A link should say it's a link");
+  ok(link2.isLink(), "A link should say it's a link");
+  ok(loop.isLoop(), "A loop should say it's a loop");
+});
+
+test("Edge exists vs. anti-edge", function() {
+  var G = new Graph();
+  var v1 = new Vertex({name:'kurt', age:27});
+  var v2 = new Vertex({name:'janis', age:27});
+  G.addVertices([v1,v2]);
+  
+  var e1 = new Edge(v1,v2);
+  var e2 = new Edge(v2,v1);
+
+  G.addEdges([]);
+  
+  ok(!G.edgeExists(e1), "e1 is not edge");
+  ok(G.isAntiEdge(e1), "e1 is an anti-edge");
+  G.addEdges([e1]);
+  ok(G.edgeExists(e1), "e1 is an edge");
+  ok(!G.isAntiEdge(e1), "e1 is not an anti-edge");
+  
+  G.addEdges([e1,e2]);
+  ok(G.edgeExists(e1), "e1 is an edge");
+  ok(!G.isAntiEdge(e1), "e1 is not an anti-edge");
+  ok(G.edgeExists(e2), "e1 is an edge");
+  ok(!G.isAntiEdge(e2), "e1 is not an anti-edge");
+});
+
 test("Multiplicity", function(){
 	var G = new Graph();
 	var v1 = new Vertex();
@@ -151,30 +198,52 @@ test("Has loops", function(){
 });
 
 test("Simple, Multi, Pseudo", function(){
-	var G = new Graph();
+	var G1 = new Graph();
 	var v1 = new Vertex();
 	var v2 = new Vertex();
-	G.addVertices([v1,v2]);
+	G1.addVertices([v1,v2]);
 	var e1 = new Edge(v1,v2);
 	var e2 = new Edge(v1,v2);
 	var e3 = new Edge(v1,v1);
 	
-	G.addEdge(e1);
-	ok(!G.isMulti(), "A graph with multiplicity 1 is not Multi");
-	ok(G.isSimple(), "A graph with multiplicity 1 and no loops is Simple");
-	ok(!G.isPseudo(), "A graph with multiplicity 1 and no loops is not Pseudo");
+	G1.addEdge(e1);
+	ok(!G1.isMulti(), "A graph with multiplicity 1 is not Multi");
+	ok(G1.isSimple(), "A graph with multiplicity 1 and no loops is Simple");
+	ok(!G1.isPseudo(), "A graph with multiplicity 1 and no loops is not Pseudo");
 	
-	G.addEdge(e1); // same edge again
-	ok(G.isMulti(), "A graph with multiplicity 2 is Multi");
-	ok(!G.isSimple(), "A graph with multiplicity 2 and no loops is not Simple");
-	ok(!G.isPseudo(), "A graph with multiplicity 2 and no loops is not Pseudo");
+	G1.addEdge(e1); // same edge again
+	ok(G1.isMulti(), "A graph with multiplicity 2 is Multi");
+	ok(!G1.isSimple(), "A graph with multiplicity 2 and no loops is not Simple");
+	ok(!G1.isPseudo(), "A graph with multiplicity 2 and no loops is not Pseudo");
 	
-	G.addEdge(e3); // different edge with same vertices
-	ok(G.isMulti(), "A graph with multiplicity 2 and a loop is Multi");
-	ok(!G.isSimple(), "A graph with multiplicity 2 and a loop is not Simple");
-	ok(G.isPseudo(), "A graph with multiplicity 2 and a loops is Pseudo");
+	G1.addEdge(e3); // different edge with same vertices
+	ok(G1.isMulti(), "A graph with multiplicity 2 and a loop is Multi");
+	ok(!G1.isSimple(), "A graph with multiplicity 2 and a loop is not Simple");
+	ok(G1.isPseudo(), "A graph with multiplicity 2 and a loops is Pseudo");
 	
+	var G2 = new Graph();
+	G2.addVertices([v1,v2]);
+	G2.addEdge(e3);
+	ok(!G2.isSimple(), "A graph with multiplicity 1 and 1 loop is not Simple");
 });
+
+test("Complement", function(){
+  var G = new Graph();
+  var v1 = new Vertex({name:'kurt', age:27});
+  var v2 = new Vertex({name:'janis', age:27});
+  var e1 = new Edge(v1,v1);
+  var e2 = new Edge(v1,v2);
+  var e3 = new Edge(v2,v1);
+  var e4 = new Edge(v2,v2);
+  G.addVertices([v1,v2]);
+  
+  var C = G.complement();
+  ok(C.edgeExists(e1), "e1 should be an edge in complement(G)");
+  ok(C.edgeExists(e2), "e2 should be an edge in complement(G)");
+  ok(C.edgeExists(e3), "e3 should be an edge in complement(G)");
+  ok(C.edgeExists(e4), "e4 should be an edge in complement(G)");
+});
+
 
 
   });

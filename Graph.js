@@ -2,18 +2,28 @@
  * Graph is a mathematical graph library for javascript. It is designed to be a functional
  * stand-alone library. It is a bare-bones library designed to be light-weight and scalable.
  * 
- * Definitions are taken from the Wikipedia glossary of mathematical graph theory.
+ * Definitions are taken from the Wikipedia glossary of mathematical graph theory. That's a 
+ * great place to start to get a basic understanding of abstract graph theory without 
+ * the implemetation details.
+ *
  * http://en.wikipedia.org/wiki/Glossary_of_graph_theory
+ * 
+ * Note: In its current form, the library supports only undirected graphs.
  * 
  * @author yoni ben-meshulam
  */
-
+;(function(){
 /**
  * A vertex (basic element) is simply drawn as a node or a dot. The vertex set of G 
  * is usually denoted by V(G), or V when there is no danger of confusion.
  */
-Vertex = function(){};
-
+Vertex = function(obj){
+	// a Vertex is nothing more than an object
+	// this allows you to extend vertices in any way desirable
+	for(var k in obj) {
+		this[k]=obj[k];
+	}
+};
 /**
  * An edge (a set of two elements) is drawn as a line connecting two vertices, called 
  * endvertices, or endpoints. An edge with endvertices x and y is denoted by xy 
@@ -39,9 +49,9 @@ Edge = function(v1, v2){
 		return !this.isLoop();
 	};
 
-	// The multiplicity of an edge is the number of multiple edges sharing the same endvertices
+	// some functions have different implementations, depending on if the graph is directed
 	if(this.directed) {
-		// for an undirected edge, it doesn't matter which order the vertices are in
+		// The multiplicity of an edge is the number of multiple edges sharing the same endvertices
 		this.multiplicity = function(G) {
 			var m = 0;
 			for(var i in G.E) {
@@ -54,7 +64,7 @@ Edge = function(v1, v2){
 			return m;
 		};
 	} else {
-		// for a directed edge, the vertices must be in the same order
+		// The multiplicity of an edge is the number of multiple edges sharing the same endvertices
 		this.multiplicity = function(G) {
 			var m = 0;
 			for(var i in G.E) {
@@ -75,7 +85,6 @@ Edge = function(v1, v2){
 		return this.multiplicity(G) === 1;			
 	};
 };
-
 /**
  * A graph G consists of two types of elements, namely vertices and edges. Every edge 
  * has two endpoints in the set of vertices, and is said to connect or join the two 
@@ -92,12 +101,15 @@ Graph = function(){
 
 	// adds the given vertex to the graph
 	this.addVertex = function(v) {
+		if(typeof(v)!='object') throw "A vertex must be an object.";
 		this.V.push(v);
 		return true; // success
 	};
 	// adds the given vertices to the graph
 	this.addVertices = function(V) {
-		this.V = this.V.concat(V);
+		for(var i in V) {
+			this.addVertex(V[i]);
+		}
 		return true; // success
 	};
 	// adds the given edge to the graph
@@ -107,7 +119,9 @@ Graph = function(){
 	};
 	// adds the given edges to the graph
 	this.addEdges = function(E) {
-		this.E = this.E.concat(E);
+		for(var i in E) {
+			this.addEdge(E[i]);
+		}
 		return true; // success
 	};
 	// The order of a graph is the number of vertices, i.e. |V(G)|.
@@ -147,4 +161,49 @@ Graph = function(){
 	this.isPseudo = function() {
 		return this.hasLoops()&&(this.multiplicity()!==1);
 	};
+	// An anti-edge is an edge that "is not there". More formally, for two vertices u and v, {u,v} is an anti-edge in a graph G whenever {u,v} is not an edge in G. This means that there is either no edge between the two vertices or (for directed graphs) at most one of (u,v) and (v,u) from v is an arc in G.
+	this.isAntiEdge = function(e) {
+		return !this.edgeExists(e);
+	};
+
+	// some functions have different implementations, depending on if the graph is directed
+	if (this.directed) {
+		// Returns true if the edge exists in the graph
+		this.edgeExists = function(e){
+			for (var i in this.E) {
+				var edge = this.E[i];
+				if (edge.v1 === e.v1 && edge.v2 === e.v2) {
+					return true;
+				}
+				return false;
+			}
+		};
+	} else {
+		// Returns true if the edge exists in the graph
+		this.edgeExists = function(e){
+			for (var i in this.E) {
+				var edge = this.E[i];
+				if ((edge.v1 === e.v1 && edge.v2 === e.v2) ||
+				(edge.v1 === e.v2 && edge.v2 === e.v1)) {
+					return true;
+				}
+			}
+			return false;
+		};
+	}
+	//The complement of a graph G is a graph with the same vertex set as G but with an edge set such that xy is an edge in complement(G) if and only if xy is not an edge in G.
+	this.complement = function() {
+		var C = new Graph();
+		C.addVertices(this.V);
+		for(var i in this.V) {
+			for(var j in this.V) {
+				var e = new Edge(this.V[i], this.V[j]);
+				if(this.isAntiEdge(e)) {
+					C.addEdge(e);
+				}
+			}
+		}
+		return C;
+	};
 };
+})();

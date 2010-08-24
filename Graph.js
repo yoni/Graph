@@ -1,5 +1,13 @@
-/**
- * For details on how to use 
+/*
+ * Mathematical Graph library. For details on how to use please read:
+ *    
+ *    README.markdown
+ * 
+ * or go to
+ *    
+ *    http://github.com/yoni/Grap
+ *
+ * @author Yoni Ben-Meshulam
  */
 
 /**

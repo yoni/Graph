@@ -313,7 +313,9 @@ var edge = {
     var m = 0;
     for (var key in G.E) {
       var e2 = G.E[key];
-      if(edge.equal(e2, edge)) m++;
+      if(edge.equal(e2, e)) {
+        m++;
+      }
     }
     return m;
   },

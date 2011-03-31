@@ -56,3 +56,6 @@ Lower case functions do not change the state of their arguments. They have input
 To clone with git
 
     git clone git@github.com:yoni/Graph.git
+
+### Author ###
+[Yoni Ben-Meshulam](http://heyitsyoni.com)
